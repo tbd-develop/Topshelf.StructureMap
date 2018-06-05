@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Quartz;
 using StructureMap;
 using Topshelf.StructureMap;
@@ -10,9 +11,12 @@ namespace Topshelf.Quartz.StructureMap.Sample
 {
     class Program
     {
-        static void Main() {
-            HostFactory.Run(c => {
-                var container = new Container(cfg => {
+        static void Main()
+        {
+            HostFactory.Run(c =>
+            {
+                var container = new Container(cfg =>
+                {
                     cfg.For<IDependency>().Use<Dependency>().AlwaysUnique();
                     cfg.For<IScopeDependency>().Use<ScopeDependency>();
                 });
@@ -20,7 +24,8 @@ namespace Topshelf.Quartz.StructureMap.Sample
 #if SERVICE_CONTROL
 
                 c.Service<SampleServiceControl>(
-                     s => {
+                     s =>
+                     {
                          s.ConstructUsingStructureMap();
                          s.UseQuartzStructureMap()
                             .ScheduleQuartzJob(q =>
@@ -60,16 +65,21 @@ namespace Topshelf.Quartz.StructureMap.Sample
         private readonly IDependency _first;
         private readonly IDependency _second;
 
-        public SampleJob(IDependency first, IDependency second) {
+        public SampleJob(IDependency first, IDependency second)
+        {
             _first = first;
             _second = second;
         }
 
-        public void Execute(IJobExecutionContext context) {
-            Console.WriteLine($"{DateTime.Now} - Sample job({_first.Dep.Id}) executing...");
-            Console.WriteLine("Scope Dependencies are {0} equal.", _first.Dep.Equals(_second.Dep) ? "" : "not");
-            Thread.Sleep(2000);
-            Console.WriteLine($"Sample job({_first.Dep.Id}) executed.");
+        public Task Execute(IJobExecutionContext context)
+        {
+            return Task.Run(() =>
+            {
+                Console.WriteLine($"{DateTime.Now} - Sample job({_first.Dep.Id}) executing...");
+                Console.WriteLine("Scope Dependencies are {0} equal.", _first.Dep.Equals(_second.Dep) ? "" : "not");
+                Thread.Sleep(2000);
+                Console.WriteLine($"Sample job({_first.Dep.Id}) executed.");
+            });
         }
     }
 
@@ -83,15 +93,18 @@ namespace Topshelf.Quartz.StructureMap.Sample
     {
         private readonly Guid _corelationGuid;
 
-        public ScopeDependency() {
+        public ScopeDependency()
+        {
             _corelationGuid = Guid.NewGuid();
         }
 
-        public Guid Id {
+        public Guid Id
+        {
             get { return _corelationGuid; }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Console.WriteLine("{0} was disposed.", _corelationGuid);
         }
     }
@@ -104,12 +117,14 @@ namespace Topshelf.Quartz.StructureMap.Sample
 
     public class Dependency : IDependency
     {
-        public Dependency(IScopeDependency dependency) {
+        public Dependency(IScopeDependency dependency)
+        {
             Dep = dependency;
         }
 
         public IScopeDependency Dep { get; }
-        public void Write() {
+        public void Write()
+        {
             Console.WriteLine("Line from dependency. ScopeId = {0}", Dep.Id);
         }
     }
@@ -118,11 +133,13 @@ namespace Topshelf.Quartz.StructureMap.Sample
     {
         private readonly IDependency _dependency;
 
-        public SampleService(IDependency dependency) {
+        public SampleService(IDependency dependency)
+        {
             _dependency = dependency;
         }
 
-        public bool Start() {
+        public bool Start()
+        {
             Console.WriteLine("--------------------------------");
             Console.WriteLine("Sample Service Started...");
             _dependency.Write();
@@ -131,7 +148,8 @@ namespace Topshelf.Quartz.StructureMap.Sample
             return true;
         }
 
-        public bool Stop() {
+        public bool Stop()
+        {
             return true;
         }
     }
@@ -140,11 +158,13 @@ namespace Topshelf.Quartz.StructureMap.Sample
     {
         private readonly IDependency _dependency;
 
-        public SampleServiceControl(IDependency dependency) {
+        public SampleServiceControl(IDependency dependency)
+        {
             _dependency = dependency;
         }
 
-        public bool Start(HostControl hostControl) {
+        public bool Start(HostControl hostControl)
+        {
             Console.WriteLine("--------------------------------");
             Console.WriteLine("Sample Service Started...");
             _dependency.Write();
@@ -153,7 +173,8 @@ namespace Topshelf.Quartz.StructureMap.Sample
             return true;
         }
 
-        public bool Stop(HostControl hostControl) {
+        public bool Stop(HostControl hostControl)
+        {
             return true;
         }
     }
